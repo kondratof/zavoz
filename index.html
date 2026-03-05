@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>С 8 Марта!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=Playfair+Display:ital,wght@1,600&display=swap');
+
+        :root {
+            --primary: #ff758c;
+            --secondary: #ff7eb3;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            position: relative;
+        }
+
+        #sakura-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            perspective: 1000px;
+        }
+
+        .intro-screen {
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .magic-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 117, 140, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: pulse 2s infinite;
+        }
+
+        .magic-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 117, 140, 0.6);
+        }
+
+        .card {
+            display: none;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 1s ease;
+        }
+
+        .card.active {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff758c, #ff7eb3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(255, 117, 140, 0.3);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+
+        .highlight {
+            color: #ff7eb3;
+            font-weight: 600;
+        }
+
+        .footer-note {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 30px;
+            font-style: italic;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 117, 140, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 117, 140, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 117, 140, 0); }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            .card { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="sakura-canvas"></canvas>
+
+    <div class="container">
+        <div class="intro-screen" id="intro">
+            <button class="magic-btn" onclick="openCard()">Нажми меня ✨</button>
+        </div>
+
+        <div class="card" id="greeting-card">
+            <h1>С 8 Марта!</h1>
+            <p id="greeting-text">Дорогая <span class="highlight" id="name-placeholder">гостья</span>,</p>
+
+            <p id="main-message">
+                Пусть эта весна принесет в твою жизнь столько же ярких красок, сколько лепестков сейчас падает на экране.
+                Ты — воплощение красоты, нежности и силы.
+                <br><br>
+                Оставайся такой же невероятной, сияй ярче звезд и пусть каждый твой день будет наполнен улыбками и любовью!
+            </p>
+
+            <div class="footer-note">
+                P.S. все твои данные теперь у меня в БД)
+                не надо было нажимать /start
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === Чтение имени из URL ===
+        function getNameFromURL() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                let name = params.get('name');
+
+                if (name) {
+                    // Декодируем и красиво форматируем имя
+                    name = decodeURIComponent(name.trim());
+                    name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+                    return name;
+                }
+            } catch (e) {
+                console.log('Ошибка чтения URL:', e);
+            }
+            return null;
+        }
+
+        // === Вставка имени в страницу ===
+        function personalizeGreeting(name) {
+            const nameEl = document.getElementById('name-placeholder');
+            const greetingEl = document.getElementById('greeting-text');
+
+            if (name && nameEl) {
+                // Безопасная вставка текста
+                nameEl.textContent = name;
+            }
+        }
+
+        // === Логика открытия карточки ===
+        function openCard() {
+            const intro = document.getElementById('intro');
+            const card = document.getElementById('greeting-card');
+
+            intro.style.opacity = '0';
+            intro.style.transform = 'scale(0.8)';
+
+            setTimeout(() => {
+                intro.style.display = 'none';
+                card.style.display = 'block';
+                setTimeout(() => {
+                    card.classList.add('active');
+                }, 50);
+            }, 800);
+        }
+
+        // === Инициализация при загрузке ===
+        document.addEventListener('DOMContentLoaded', () => {
+            const name = getNameFromURL();
+            personalizeGreeting(name);
+        });
+
+        // === Анимация сакуры (Canvas) ===
+        const canvas = document.getElementById('sakura-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let petals = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        class Petal {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height - height;
+                this.size = Math.random() * 15 + 10;
+                this.speedY = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 2 - 1;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 2 - 1;
+                this.color = `rgba(255, ${Math.floor(Math.random() * 100 + 100)}, ${Math.floor(Math.random() * 100 + 150)}, ${Math.random() * 0.5 + 0.3})`;
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.y * 0.01) + this.speedX * 0.5;
+                this.rotation += this.rotationSpeed;
+                if (this.y > height) {
+                    this.y = -20;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(this.size / 2, -this.size / 2, this.size, 0, 0, this.size);
+                ctx.bezierCurveTo(-this.size, 0, -this.size / 2, -this.size / 2, 0, 0);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initPetals() {
+            for (let i = 0; i < 50; i++) {
+                petals.push(new Petal());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            petals.forEach(petal => {
+                petal.update();
+                petal.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        initPetals();
+        animate();
+    </script>
+</body>
+</html>
