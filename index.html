@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>С 8 Марта!</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=Playfair+Display:ital,wght@1,600&display=swap');
@@ -16,16 +16,38 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            min-height: -webkit-fill-available; /* Для iOS */
+        }
+
         body {
             font-family: 'Montserrat', sans-serif;
             background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
-            height: 100vh;
             overflow: hidden;
+            color: white;
+            position: relative;
+            /* Двойное центрирование для максимальной совместимости */
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
-            position: relative;
+        }
+
+        /* Дополнительный wrapper для гарантии центрирования */
+        .center-wrapper {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .center-wrapper > * {
+            pointer-events: auto;
         }
 
         #sakura-canvas {
@@ -41,6 +63,25 @@
             z-index: 10;
             text-align: center;
             perspective: 1000px;
+            /* Центрируем содержимое контейнера */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .intro-screen,
+        .card {
+            /* Гарантируем, что оба элемента занимают центр */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
         }
 
         .intro-screen {
@@ -61,6 +102,8 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             animation: pulse 2s infinite;
+            /* Центрирование кнопки */
+            margin: 0 auto;
         }
 
         .magic-btn:hover {
@@ -70,6 +113,11 @@
         }
 
         .card {
+            position: absolute; /* Чтобы карточка не сдвигала контейнер */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateY(50px);
+            opacity: 0;
             display: none;
             background: var(--glass);
             backdrop-filter: blur(15px);
@@ -80,32 +128,36 @@
             max-width: 500px;
             width: 90%;
             box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            transform: translateY(50px);
-            opacity: 0;
             transition: all 1s ease;
+            text-align: center;
         }
 
         .card.active {
-            display: block;
-            transform: translateY(0);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform: translate(-50%, -50%) translateY(0);
             opacity: 1;
         }
 
         h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 3rem;
+            font-size: clamp(2rem, 8vw, 3rem); /* Адаптивный размер шрифта */
             margin-bottom: 10px;
             background: linear-gradient(to right, #ff758c, #ff7eb3);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 2px 10px rgba(255, 117, 140, 0.3);
+            width: 100%;
         }
 
         p {
-            font-size: 1.1rem;
+            font-size: clamp(1rem, 4vw, 1.1rem); /* Адаптивный размер */
             line-height: 1.6;
             margin-bottom: 20px;
             color: #e0e0e0;
+            width: 100%;
         }
 
         .highlight {
@@ -114,10 +166,11 @@
         }
 
         .footer-note {
-            font-size: 0.9rem;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
             opacity: 0.7;
             margin-top: 30px;
             font-style: italic;
+            width: 100%;
         }
 
         @keyframes pulse {
@@ -126,9 +179,35 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 117, 140, 0); }
         }
 
+        /* Адаптация для мобильных */
         @media (max-width: 600px) {
-            h1 { font-size: 2.2rem; }
-            .card { padding: 25px; }
+            .card {
+                padding: 25px 20px;
+                width: 95%;
+                border-radius: 16px;
+            }
+
+            .magic-btn {
+                padding: 16px 32px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Для очень маленьких экранов */
+        @media (max-height: 500px) {
+            .container {
+                padding: 10px;
+            }
+            .card {
+                padding: 20px 15px;
+            }
+        }
+
+        /* Fix для iOS Safari */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                min-height: -webkit-fill-available;
+            }
         }
     </style>
 </head>
@@ -136,25 +215,27 @@
 
     <canvas id="sakura-canvas"></canvas>
 
-    <div class="container">
-        <div class="intro-screen" id="intro">
-            <button class="magic-btn" onclick="openCard()">Нажми меня ✨</button>
-        </div>
+    <div class="center-wrapper">
+        <div class="container">
+            <div class="intro-screen" id="intro">
+                <button class="magic-btn" onclick="openCard()">Нажми меня ✨</button>
+            </div>
 
-        <div class="card" id="greeting-card">
-            <h1>С 8 Марта!</h1>
-            <p id="greeting-text">Дорогая <span class="highlight" id="name-placeholder">гостья</span>,</p>
+            <div class="card" id="greeting-card">
+                <h1>С 8 Марта!</h1>
+                <p id="greeting-text">Дорогая <span class="highlight" id="name-placeholder">гостья</span>,</p>
 
-            <p id="main-message">
-                Пусть эта весна принесет в твою жизнь столько же ярких красок, сколько лепестков сейчас падает на экране.
-                Ты — воплощение красоты, нежности и силы.
-                <br><br>
-                Оставайся такой же невероятной, сияй ярче звезд и пусть каждый твой день будет наполнен улыбками и любовью!
-            </p>
+                <p id="main-message">
+                    Пусть эта весна принесет в твою жизнь столько же ярких красок, сколько лепестков сейчас падает на экране.
+                    Ты — воплощение красоты, нежности и силы.
+                    <br><br>
+                    Оставайся такой же невероятной, сияй ярче звезд и пусть каждый твой день будет наполнен улыбками и любовью!
+                </p>
 
-            <div class="footer-note">
-                P.S. все твои данные теперь у меня в БД)
-                не надо было нажимать /start
+                <div class="footer-note">
+                    P.S. все твои данные теперь у меня в БД.<br>
+                    не надо было нажимать /start
+                </div>
             </div>
         </div>
     </div>
@@ -167,7 +248,6 @@
                 let name = params.get('name');
 
                 if (name) {
-                    // Декодируем и красиво форматируем имя
                     name = decodeURIComponent(name.trim());
                     name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
                     return name;
@@ -181,10 +261,7 @@
         // === Вставка имени в страницу ===
         function personalizeGreeting(name) {
             const nameEl = document.getElementById('name-placeholder');
-            const greetingEl = document.getElementById('greeting-text');
-
             if (name && nameEl) {
-                // Безопасная вставка текста
                 nameEl.textContent = name;
             }
         }
@@ -199,10 +276,11 @@
 
             setTimeout(() => {
                 intro.style.display = 'none';
-                card.style.display = 'block';
+                card.style.display = 'flex'; // Важно: flex для центрирования содержимого
+                // Небольшая задержка для запуска CSS transition
                 setTimeout(() => {
                     card.classList.add('active');
-                }, 50);
+                }, 10);
             }, 800);
         }
 
@@ -210,6 +288,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             const name = getNameFromURL();
             personalizeGreeting(name);
+
+            // Пересчет высоты для мобильных браузеров
+            const setVh = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            setVh();
+            window.addEventListener('resize', setVh);
         });
 
         // === Анимация сакуры (Canvas) ===
@@ -276,6 +362,9 @@
         }
 
         window.addEventListener('resize', resize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resize, 300); // Задержка после поворота
+        });
         resize();
         initPetals();
         animate();
